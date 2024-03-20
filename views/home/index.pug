@@ -1,0 +1,63 @@
+include ../head.pug
+body
+    .container.mt-5
+        .row.d-flex.align-items-center
+            .col-md-6
+                h1 To Do List
+            .col-md-6.text-end
+                a.btn.btn-success(href='/add' role='button')   
+                    <i class="fa-solid fa-square-plus"></i>     
+        table.table.table-responsive.table-hover.table-striped.table-dark
+            thead
+                tr
+                    th(scope="col") ID
+                    th(scope="col") Task Name
+                    th(scope="col") Task Deadline
+                    th(scope="col") Branch
+                    th(scope="col") Contact Phone
+                    th(scope="col") Task Owner
+                    th(scope="col") Actions
+            tbody
+footer 
+    p "This web application was created to fulfill Web Technology module’s requirements and does not represent an actual company or service"
+script.
+    document.addEventListener('DOMContentLoaded', function() {
+        axios.get('/api/tasks').then(function(response) {
+            const tasks = response.data;
+            const tableBody = document.querySelector('table tbody');
+            tasks.forEach(t => {
+                const row = document.createElement('tr');
+                const task = t.task; // <- Add a semicolon here
+                row.innerHTML = `
+                    <td>${t.id}</td>
+                    <td>${task.taskName}</td>
+                    <td>${task.taskDeadline}</td>
+                    <td>${task.branch}</td>
+                    <td>${task.contactPhone}</td>
+                    <td>${task.taskOwner}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" data-id="${t.id}" onclick="window.location.href='/update/${t.id}'">Update</button>
+                        <button class="btn btn-danger btn-sm" data-id="${t.id}"><i class="fa-regular fa-trash-can"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(function(error) {
+            console.log(error);
+        });
+
+        // Use event delegation for delete buttons
+        document.addEventListener('click', function(task) {
+            if (task.target && task.target.classList.contains('btn-danger')) {
+                const taskId = task.target.getAttribute('data-id');
+                axios.delete(`/api/tasks/${taskId}`).then(function(response) {
+                    alert('Deleted successfully', response);
+                    location.href = '/';
+                })
+                .catch(function(error) {
+                    alert('Error deleting task: ' + error);
+                }); // <- Add a closing parenthesis here
+            } // <- Add a closing curly brace here
+        }); // <- Add a closing parenthesis here
+    }); // <- Add a closing parenthesis here

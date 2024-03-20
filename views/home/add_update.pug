@@ -1,0 +1,75 @@
+include ../head.pug
+body
+    .container.mt-5
+        h1.text-center #{mode}
+        .mb-3
+            label(for="taskName" class="form-label") Task Name
+            input(type="text" class="form-control" id="taskName" name="taskName" required)
+        .mb-3
+            label(for="taskDeadline" class="form-label") Task Deadline
+            .input-group.date(id="datetimepicker1" data-target-input="nearest")
+                input(type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1" id="taskDeadline" name="taskDeadline" required)
+                .input-group-append(data-target="#datetimepicker1" data-toggle="datetimepicker")
+                    .input-group-text
+                        i.fas.fa-calendar-alt
+        .mb-3
+            label(for="branch" class="form-label") Branch
+            input(type="text" class="form-control" id="branch" name="branch" required)
+        .mb-3
+            label(for="contactPhone" class="form-label") Contact Phone
+            input(type="tel" class="form-control" id="contactPhone" name="contactPhone" required)
+        .mb-3
+            label(for="taskOwner" class="form-label") Task Owner
+            input(type="text" class="form-control" id="taskOwner" name="taskOwner" required)
+        button(type="submit" class="btn btn-success" onclick="submitForm()") #{mode === 'Update' ? 'Update': 'Add'}
+        span &nbsp;
+        button(type="submit" class="btn btn-primary" onclick="window.location.href='/'") Back to list
+
+
+script.
+    const format = 'DD/MM/YYYY HH:mm'
+    const picker = new tempusDominus.TempusDominus(document.getElementById('datetimepicker1'),{
+        localization: {
+            'locale': 'eng'
+        }
+    })
+    picker.dates.formatInput = function(date) {
+        return moment(date).format(format)
+    }
+
+    if ("#{mode}" === "Update") {
+        const taskData = !{JSON.stringify(taskData || {})}.task;
+        document.getElementById('taskName').value = taskData.taskName || '';
+
+        picker.dates.setValue(
+            new tempusDominus.DateTime(moment(taskData.taskDeadline, format))
+        );
+
+        document.getElementById('branch').value = taskData.branch || '';
+        document.getElementById('contactPhone').value = taskData.contactPhone || '';
+        document.getElementById('taskOwner').value = taskData.taskOwner || '';
+    }
+
+    function submitForm() {
+        const taskData = {
+            taskName: document.getElementById('taskName').value,
+            taskDeadline: document.getElementById('taskDeadline').value,
+            branch: document.getElementById('branch').value,
+            contactPhone: document.getElementById('contactPhone').value,
+            taskOwner: document.getElementById('taskOwner').value,
+        };
+
+        const url = "#{mode}" === "Update" ? `/api/tasks/${!{JSON.stringify(taskData || {})}.id}` : '/api/tasks';
+        const method = "#{mode}" === "Update" ? 'put' : 'post';
+
+        axios[method](url, taskData).then(response => {
+            alert('Success!');
+            location.href = '/'
+        })
+        .catch(error => {
+            if(error.response)
+                alert(JSON.stringify(error.response.data.errors))
+            else
+                alert(error)
+        });
+    }
